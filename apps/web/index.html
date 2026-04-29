@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wanman Matrix Console</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="rail">
+        <div class="brand">
+          <p class="eyebrow">wanman.ai</p>
+          <h1>Matrix Console</h1>
+        </div>
+        <nav>
+          <a href="#topics">Hot Topics</a>
+          <a href="#workflow">Workflow</a>
+          <a href="#reviews">Review Center</a>
+          <a href="#accounts">Account Matrix</a>
+          <a href="#publishing">Publishing</a>
+        </nav>
+      </aside>
+      <main class="main">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Phase 1 MVP</p>
+            <h2>受控的 Web3/X 内容矩阵操作系统</h2>
+            <p>
+              事件对象优先，默认强制人工终审。控制台显式展示证据链、五段状态机、相似度门禁与账号健康门禁。
+            </p>
+          </div>
+          <div class="hero-card">
+            <span>Gate Status</span>
+            <strong id="gateDecision">Loading...</strong>
+            <small id="gateMeta"></small>
+          </div>
+        </section>
+
+        <section id="topics" class="panel">
+          <div class="panel-head">
+            <h3>Hot Topic Board</h3>
+            <span id="sourceCount"></span>
+          </div>
+          <div id="topicsGrid" class="grid two"></div>
+        </section>
+
+        <section id="workflow" class="panel">
+          <div class="panel-head">
+            <h3>Content Workflow</h3>
+            <span>Five-stage state machine</span>
+          </div>
+          <div id="trace" class="trace"></div>
+          <div id="variants" class="grid three"></div>
+        </section>
+
+        <section id="reviews" class="panel">
+          <div class="panel-head">
+            <h3>Review Center</h3>
+            <span>机器审核 + 人工终审</span>
+          </div>
+          <div id="reviewCard" class="review-card"></div>
+        </section>
+
+        <section id="accounts" class="panel">
+          <div class="panel-head">
+            <h3>Account Matrix</h3>
+            <span>persona / health / threshold</span>
+          </div>
+          <div id="accountsGrid" class="grid three"></div>
+        </section>
+
+        <section id="publishing" class="panel">
+          <div class="panel-head">
+            <h3>Publishing Guardrail</h3>
+            <span>Similarity + Health + Manual takeover</span>
+          </div>
+          <div id="publishingCard" class="grid two"></div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

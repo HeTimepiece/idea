@@ -1,0 +1,16 @@
+{
+  "name": "wanman-web3-matrix",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "node apps/api/src/server.mjs",
+    "dev:web": "node apps/web/server.mjs",
+    "dev:worker": "node apps/worker/src/run-pipeline.mjs",
+    "test": "node --test"
+  }
+}

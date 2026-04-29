@@ -1,0 +1,316 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  users     User[]
+}
+
+model User {
+  id          String           @id @default(cuid())
+  workspaceId String
+  email       String           @unique
+  name        String
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id])
+  roles       RoleAssignment[]
+  reviews     ReviewRecord[]
+}
+
+model RoleAssignment {
+  id        String @id @default(cuid())
+  userId    String
+  role      String
+  scopeType String
+  scopeId    String?
+  user      User   @relation(fields: [userId], references: [id])
+}
+
+model XAccount {
+  id                String                 @id @default(cuid())
+  handle            String                 @unique
+  healthStatus      String
+  rateLimitStatus   String?
+  lastPostedAt      DateTime?
+  persona           AccountPersona?
+  healthSnapshots   AccountHealthSnapshot[]
+  styleExamples     AccountStyleExample[]
+  publishJobs       PublishJobAccount[]
+}
+
+model AccountPersona {
+  id                   String   @id @default(cuid())
+  accountId            String   @unique
+  personaType          String
+  audienceSegment      String
+  language             String
+  region               String
+  toneRules            Json
+  structurePreferences Json
+  bannedPhrases        Json
+  requiredDisclosures  Json
+  similarityThreshold  Float
+  account              XAccount @relation(fields: [accountId], references: [id])
+}
+
+model AccountStyleExample {
+  id        String   @id @default(cuid())
+  accountId String
+  content   String
+  score     Float
+  account   XAccount @relation(fields: [accountId], references: [id])
+}
+
+model AccountHealthSnapshot {
+  id                String   @id @default(cuid())
+  accountId         String
+  authStatus        String
+  rateLimitStatus   String
+  publishSuccess24h Float
+  createdAt         DateTime @default(now())
+  account           XAccount @relation(fields: [accountId], references: [id])
+}
+
+model Source {
+  id         String           @id @default(cuid())
+  name       String
+  sourceType String
+  priority   Int
+  items      SourceItem[]
+  fetchJobs  SourceFetchJob[]
+}
+
+model SourceFetchJob {
+  id        String   @id @default(cuid())
+  sourceId  String
+  status    String
+  attempts  Int      @default(0)
+  startedAt DateTime @default(now())
+  source    Source   @relation(fields: [sourceId], references: [id])
+}
+
+model SourceItem {
+  id          String   @id @default(cuid())
+  sourceId    String
+  title       String
+  sourceUrl   String
+  sourceType  String
+  publishedAt DateTime
+  fetchedAt   DateTime @default(now())
+  rawPayload  Json
+  source      Source   @relation(fields: [sourceId], references: [id])
+}
+
+model EventCluster {
+  id              String              @id @default(cuid())
+  canonicalTitle  String
+  eventType       String
+  status          String
+  importanceScore Int
+  riskLevel       String
+  firstSeenAt     DateTime
+  lastSeenAt      DateTime
+  entities        EventEntityRef[]
+  narratives      EventNarrativeRef[]
+  evidence        EventEvidenceRef[]
+  trendScore      TrendScore?
+  analysisReport  AnalysisReport?
+  contentJobs     ContentJob[]
+}
+
+model Entity {
+  id        String           @id @default(cuid())
+  entityType String
+  name      String
+  symbol    String?
+  events    EventEntityRef[]
+}
+
+model EventEntityRef {
+  id        String       @id @default(cuid())
+  eventId   String
+  entityId  String
+  event     EventCluster @relation(fields: [eventId], references: [id])
+  entity    Entity       @relation(fields: [entityId], references: [id])
+}
+
+model EventNarrativeRef {
+  id         String       @id @default(cuid())
+  eventId    String
+  code       String
+  label      String
+  confidence Float
+  event      EventCluster @relation(fields: [eventId], references: [id])
+}
+
+model EventEvidenceRef {
+  id          String       @id @default(cuid())
+  eventId     String
+  sourceId    String
+  kind        String
+  url         String
+  publishedAt DateTime
+  event       EventCluster @relation(fields: [eventId], references: [id])
+}
+
+model TrendScore {
+  id          String       @id @default(cuid())
+  eventId      String       @unique
+  freshness    Float
+  sourceWeight Float
+  discussion   Float
+  credibility  Float
+  totalScore   Float
+  event        EventCluster @relation(fields: [eventId], references: [id])
+}
+
+model AnalysisReport {
+  id                        String       @id @default(cuid())
+  eventId                   String       @unique
+  summary                   String
+  keyEntities               Json
+  sentiment                 String
+  viralityScore             Float
+  riskLevel                 String
+  recommendedAngles         Json
+  recommendedPersonaTypes   Json
+  confidenceNote            String
+  citationMap               Json
+  event                     EventCluster @relation(fields: [eventId], references: [id])
+}
+
+model ContentJob {
+  id         String          @id @default(cuid())
+  eventId     String
+  status      String
+  event       EventCluster   @relation(fields: [eventId], references: [id])
+  drafts      Draft[]
+  reviews     ReviewRecord[]
+  publishJobs PublishJob[]
+}
+
+model Draft {
+  id             String         @id @default(cuid())
+  contentJobId   String
+  baseText       String
+  model          String
+  promptVersion  String
+  inputSnapshot  Json
+  variants       DraftVariant[]
+  contentJob     ContentJob     @relation(fields: [contentJobId], references: [id])
+}
+
+model DraftVariant {
+  id               String               @id @default(cuid())
+  draftId          String
+  accountId        String
+  personaType      String
+  hook             String
+  body             String
+  cta              String
+  similarityChecks SimilarityCheckResult[]
+  humanized        HumanizedDraft[]
+  draft            Draft                @relation(fields: [draftId], references: [id])
+}
+
+model HumanizedDraft {
+  id               String       @id @default(cuid())
+  variantId        String
+  style            String
+  factConsistency  String
+  finalText        String
+  variant          DraftVariant @relation(fields: [variantId], references: [id])
+}
+
+model SimilarityCheckResult {
+  id             String   @id @default(cuid())
+  variantId      String
+  embeddingScore Float
+  simhashScore   Float
+  structureScore Float
+  decision       String
+  variant        DraftVariant @relation(fields: [variantId], references: [id])
+}
+
+model ReviewRecord {
+  id                      String   @id @default(cuid())
+  contentJobId            String
+  decidedByUserId         String?
+  factCheckStatus         String
+  linkWhitelistStatus     String
+  contractWhitelistStatus String
+  adDisclosureStatus      String
+  xPolicyRiskStatus       String
+  matrixSimilarityStatus  String
+  decision                String
+  reason                  String
+  contentJob              ContentJob @relation(fields: [contentJobId], references: [id])
+  decidedBy               User?      @relation(fields: [decidedByUserId], references: [id])
+}
+
+model PublishJob {
+  id           String             @id @default(cuid())
+  contentJobId String
+  status       String
+  scheduledAt  DateTime?
+  contentJob   ContentJob         @relation(fields: [contentJobId], references: [id])
+  attempts     PublishAttempt[]
+  accounts     PublishJobAccount[]
+  result       PublishResult?
+}
+
+model PublishJobAccount {
+  id           String     @id @default(cuid())
+  publishJobId String
+  accountId    String
+  publishJob   PublishJob @relation(fields: [publishJobId], references: [id])
+  account      XAccount   @relation(fields: [accountId], references: [id])
+}
+
+model PublishAttempt {
+  id           String     @id @default(cuid())
+  publishJobId String
+  status       String
+  errorCode    String?
+  createdAt    DateTime   @default(now())
+  publishJob   PublishJob @relation(fields: [publishJobId], references: [id])
+}
+
+model PublishResult {
+  id             String     @id @default(cuid())
+  publishJobId    String     @unique
+  platformPostIds Json
+  syncedMetrics   Json
+  publishJob      PublishJob @relation(fields: [publishJobId], references: [id])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  actorType      String
+  actorId        String
+  workspaceId    String
+  entityType     String
+  entityId       String
+  action         String
+  beforeSnapshot Json
+  afterSnapshot  Json
+  result         String
+  reason         String?
+  createdAt      DateTime @default(now())
+}
+
+model TraceEvent {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  stage      String
+  payload    Json
+  createdAt  DateTime @default(now())
+}
